@@ -1,18 +1,36 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, OnDestroy } from '@angular/core';
 import { Chart, ChartConfiguration, ChartType } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import Annotation from 'chartjs-plugin-annotation';
+import { EMPTY, Subject, Subscription, catchError, of, takeUntil, tap } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnDestroy {
   private dataset: number[] = [65, 59, 80, 81, 56, 55, 40];
+  public apiKey: string = '';
+  public apiKeyValid: boolean = false;
+  private unsubscribe$ = new Subject();
+  private interval: any;
+  private currentSubscription: Subscription | null = null;
 
-  constructor() {
+  constructor(private httpClient: HttpClient) {
     Chart.register(Annotation);
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.complete();
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
+
+    if (this.currentSubscription) {
+      this.currentSubscription.unsubscribe();
+    }
   }
 
   public lineChartData: ChartConfiguration['data'] = {
@@ -100,6 +118,29 @@ export class AppComponent {
   public lineChartType: ChartType = 'line';
 
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
+
+  public submitKey(): void {
+    if(this.apiKey) {
+      this.apiKeyValid = true;
+      if(this.interval) {
+        clearInterval(this.interval);
+      }
+      this.interval = setInterval(() => {
+        if(this.currentSubscription) {
+          this.currentSubscription.unsubscribe();
+        }
+        const headers = new HttpHeaders().set('Authorization', `Token ${this.apiKey}`);
+        this.currentSubscription = this.httpClient.get('http://129.97.251.100:8080/api/tasks?page=1&page_size=-1&project=33', { headers }).pipe(
+          takeUntil(this.unsubscribe$),
+          tap(res => console.log(res)),
+          catchError(error => {
+            this.apiKeyValid = false;
+            return of(EMPTY);
+          })
+        ).subscribe();
+      }, 5000);
+    }
+  }
 
   private calculateMean(numbers: number[]): number {
     const sum = numbers.reduce((a, b) => a + b, 0);
