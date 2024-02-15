@@ -144,15 +144,14 @@ export class AppComponent implements OnInit, OnDestroy {
       this.currentSubscription.unsubscribe();
     }
     const headers = new HttpHeaders().set('Authorization', `Token ${this.apiKey}`);
-    this.currentSubscription = this.httpClient.get('http://129.97.251.100:8080/api/tasks?project=52', { headers }).pipe(
+    this.currentSubscription = this.httpClient.get('http://129.97.251.100:8080/api/tasks?project=53', { headers }).pipe(
       takeUntil(this.unsubscribe$),
       switchMap((res: any) => {
         if(!res || res.length === 0) {
           return of(EMPTY);
         }
         const tasks = res.tasks;
-        console.log('Tasks', tasks);
-        const tasksRequests = tasks.map((task: any) => this.httpClient.get(`http://129.97.251.100:8080/api/tasks/${task.id}/annotations`, { headers }));
+        const tasksRequests = tasks.map((task: any) => this.httpClient.get(`http://129.97.251.100:8080/api/tasks/${task.id}`, { headers }));
 
         return forkJoin(tasksRequests).pipe(
           catchError(error => {
@@ -161,7 +160,7 @@ export class AppComponent implements OnInit, OnDestroy {
         );
       }),
       tap(resp => {
-        console.log('Annotations for each task', resp);
+        console.log('Tasks', resp);
       }),
       catchError(error => {
         console.log(error);
