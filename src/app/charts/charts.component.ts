@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Chart, ChartConfiguration, ChartType } from 'chart.js';
+import { Chart, ChartConfiguration, ChartData, ChartType } from 'chart.js';
 import Annotation from 'chartjs-plugin-annotation';
+import DataLabelsPlugin from 'chartjs-plugin-datalabels';
 import { BaseChartDirective } from 'ng2-charts';
 import { EMPTY, Subject, Subscription, catchError, forkJoin, map, of, switchMap, takeUntil, tap } from 'rxjs';
 
@@ -12,7 +13,6 @@ import { EMPTY, Subject, Subscription, catchError, forkJoin, map, of, switchMap,
   styleUrls: ['./charts.component.scss']
 })
 export class ChartsComponent implements OnInit, OnDestroy {
-  private dataset: number[] = [65, 59, 80, 81, 56, 55, 40];
   private unsubscribe$ = new Subject();
   private interval: any;
   private currentSubscription: Subscription | null = null;
@@ -47,101 +47,36 @@ export class ChartsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/projects']);
   }
 
-  public lineChartData: ChartConfiguration['data'] = {
-    datasets: [
-      {
-        data: this.dataset,
-        label: 'Data',
-        borderColor: '#000000',
-        pointBackgroundColor: '#000000',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgba(148,159,177,0.8)',
-        pointRadius: 5
-      }
-    ],
-    labels: ['', '', '', '', '', '', '']
-  };
+  public barChartType: ChartType = 'bar';
+  public barChartPlugins = [DataLabelsPlugin]
 
-  public lineChartOptions: ChartConfiguration['options'] = {
-    elements: {
-      line: {
-        tension: 0,
-      },
-    },
+  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
+
+  public barChartOptions: ChartConfiguration['options'] = {
     scales: {
+      x: {},
       y: {
-        position: 'left',
-      },
-      y1: {
-        position: 'right',
-        grid: {
-          color: 'rgba(255,0,0,0.3)',
-        },
-        ticks: {
-          color: 'red',
-        },
-      },
+        min: 0
+      }
     },
     plugins: {
-      annotation: {
-        annotations: [
-          {
-            type: 'line',
-            scaleID: 'y-axis-0',
-            yMin: this.calculateMean(this.dataset),
-            yMax: this.calculateMean(this.dataset),
-            borderColor: 'orange',
-            label: {
-              content: `${this.calculateMean(this.dataset)}`,
-              display: true,
-              color: 'orange'
-            }
-          },
-          {
-            type: 'line',
-            scaleID: 'y-axis-0',
-            yMin: this.calculateMean(this.dataset) + 3 * this.calculateStdDev(this.dataset),
-            yMax: this.calculateMean(this.dataset) + 3 * this.calculateStdDev(this.dataset),
-            borderColor: 'blue',
-            label: {
-              content: `${this.calculateMean(this.dataset) + 3 * this.calculateStdDev(this.dataset)}`,
-              display: true,
-              color: 'white'
-            },
-            borderDash: [5]
-          },
-          {
-            type: 'line',
-            scaleID: 'y-axis-0',
-            yMin: this.calculateMean(this.dataset) - 3 * this.calculateStdDev(this.dataset),
-            yMax: this.calculateMean(this.dataset) - 3 * this.calculateStdDev(this.dataset),
-            borderColor: 'blue',
-            label: {
-              content: `${this.calculateMean(this.dataset) - 3 * this.calculateStdDev(this.dataset)}`,
-              display: true,
-              color: 'white'
-            },
-            borderDash: [5]
-          }
-        ]
+      legend: {
+        display: true
+      },
+      datalabels: {
+        anchor: 'end',
+        align: 'end'
       }
     }
   };
 
-  public lineChartType: ChartType = 'line';
-
-  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
-
-  private calculateMean(numbers: number[]): number {
-    const sum = numbers.reduce((a, b) => a + b, 0);
-    return sum / numbers.length;
-  }
-
-  private calculateStdDev(numbers: number[]): number {
-    const mean = this.calculateMean(numbers);
-    const variance = numbers.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / numbers.length;
-    return Math.sqrt(variance);
+  public barChartData: ChartData<'bar'> = {
+    labels: ['Task1', 'Task2', 'Task3', 'Task4', 'Task5', 'Task6', 'Task7'],
+    datasets: [
+      { data: [65, 59, 80, 81, 56, 55, 40], label: 'TP' },
+      { data: [28, 48, 40, 19, 86, 27, 90], label: 'FP' },
+      { data: [58, 78, 20, 45, 76, 17, 50], label: 'FN' },
+    ]
   }
 
   public sendNewRequest(): void {
@@ -200,10 +135,25 @@ export class ChartsComponent implements OnInit, OnDestroy {
           });
           predictions.push(p);
         });
+        let newChartData: ChartData<'bar'> = {
+          labels: [],
+          datasets: []
+        };
+        let TPs: any = [];
+        let FPs: any = [];
+        let FNs: any = [];
         for(let i = 0; i < annotations.length; ++i) {
+          newChartData.labels?.push(`Task ${i + 1}`);
           const { TP, FP, FN } = this.evaluateDetection(annotations[i], predictions[i]);
           console.log(`Task: ${i + 1}; TP: ${TP}, FP: ${FP}, FN: ${FN}`);
+          TPs.push(TP);
+          FPs.push(FP);
+          FNs.push(FN);
         }
+        newChartData.datasets.push({ data: TPs, label: 'TP' });
+        newChartData.datasets.push({ data: FPs, label: 'FP' });
+        newChartData.datasets.push({ data: FNs, label: 'FN' });
+        this.barChartData = newChartData;
       }),
       catchError(error => {
         console.log(error);
