@@ -1,18 +1,1 @@
-<canvas
-  *ngIf="apiKeyValid"
-  baseChart
-  class="chart"
-  [data]="lineChartData"
-  [options]="lineChartOptions"
-  [type]="lineChartType"
-></canvas>
-
-<div class="wrapper" *ngIf="!apiKeyValid">
-  <div class="group">      
-    <input type="text" [(ngModel)]="apiKey" required>
-    <span class="highlight"></span>
-    <span class="bar"></span>
-    <label>Api Key</label>
-  </div>
-  <button class="btn" (click)="submitKey()">Save</button>
-</div>
+<router-outlet></router-outlet>
