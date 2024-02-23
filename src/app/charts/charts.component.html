@@ -1,5 +1,33 @@
-<button (click)="navigateToProjects()">Projects</button>
+<div class="wrapper">
+  <div class="header">
+    <button class="back-button" (click)="navigateToProjects()">Back to projects</button>
+    <div class="title">
+      Project: {{ projectName }}
+    </div>
+  </div>
+</div>
+<div>
+  Tasks Completed: {{ tasksCompleted }}
+</div>
+<div>
+  Total TP: {{ totalTP }}
+</div>
+<div>
+  Total FP: {{ totalFP }}
+</div>
+<div>
+  Total FN: {{ totalFN }}
+</div>
+<div>
+  Precision: {{ precision | percent }}
+</div>
+<div>
+  Recall: {{ recall | percent }}
+</div>
 
+<ngx-spinner bdColor = "rgba(0, 0, 0, 1)" size = "medium" color = "#fff" type = "square-jelly-box" [fullScreen] = "true"></ngx-spinner>
+
+<!--
 <canvas
   baseChart
   class="chart"
@@ -8,3 +36,4 @@
   [plugins]="barChartPlugins"
   [type]="barChartType"
 ></canvas>
+-->

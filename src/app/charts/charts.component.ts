@@ -5,6 +5,7 @@ import { Chart, ChartConfiguration, ChartData, ChartType } from 'chart.js';
 import Annotation from 'chartjs-plugin-annotation';
 import DataLabelsPlugin from 'chartjs-plugin-datalabels';
 import { BaseChartDirective } from 'ng2-charts';
+import { NgxSpinnerService } from 'ngx-spinner';
 import { EMPTY, Subject, Subscription, catchError, forkJoin, map, of, switchMap, takeUntil, tap } from 'rxjs';
 
 @Component({
@@ -17,17 +18,39 @@ export class ChartsComponent implements OnInit, OnDestroy {
   private interval: any;
   private currentSubscription: Subscription | null = null;
   private projectId: number = 0;
+  
+  public projectName: string = "";
+  public tasksCompleted: number = 0;
+  public totalTP: number = 0;
+  public totalFP: number = 0;
+  public totalFN: number = 0;
+  public precision: number = 0;
+  public recall: number = 0;
 
   constructor(private httpClient: HttpClient,
     private route: ActivatedRoute,
-    private router: Router) {
+    private router: Router,
+    private spinnerService: NgxSpinnerService) {
     Chart.register(Annotation);
   }
 
   ngOnInit(): void {
+    this.spinnerService.show();
     const projId = this.route.snapshot.paramMap.get('projectId');
     if(projId) {
       this.projectId = parseInt(projId);
+      this.httpClient.get(`http://129.97.251.100:8080/api/projects/${this.projectId}`).pipe(
+        takeUntil(this.unsubscribe$),
+        tap((res: any) => {
+          this.projectName = res.title;
+          this.spinnerService.hide();
+        }),
+        catchError(error => {
+          console.log(error);
+          this.spinnerService.hide();
+          return of(EMPTY);
+        })
+      ).subscribe();
     }
     this.sendNewRequest();
   }
@@ -94,13 +117,13 @@ export class ChartsComponent implements OnInit, OnDestroy {
     if(this.currentSubscription) {
       this.currentSubscription.unsubscribe();
     }
-    this.currentSubscription = this.httpClient.get(`http://129.97.251.100:8080/api/tasks?project=${this.projectId}`).pipe(
+    this.currentSubscription = this.httpClient.get(`http://129.97.251.100:8080/api/tasks?project=${this.projectId}&page=1&page_size=100`).pipe(
       takeUntil(this.unsubscribe$),
       switchMap((res: any) => {
         if(!res || res.length === 0) {
           return of(EMPTY);
         }
-        const tasks = res.tasks;
+        let tasks = res.tasks;
         const tasksRequests = tasks.map((task: any) => this.httpClient.get(`http://129.97.251.100:8080/api/tasks/${task.id}`).pipe(
           catchError(error => {
             console.log(error);
@@ -118,6 +141,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
       }),
       tap(resp => {
         resp = resp.filter((x: any) => !!x.completed_at);
+        this.tasksCompleted = resp.length;
         resp.sort((a: any, b: any) => new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime());
         var annotations: any = [];
         var predictions: any = [];
@@ -149,7 +173,12 @@ export class ChartsComponent implements OnInit, OnDestroy {
           TPs.push(TP);
           FPs.push(FP);
           FNs.push(FN);
-        }
+        };
+        this.totalTP = TPs.reduce((acc: any, curr: any) => acc + curr, 0);
+        this.totalFP = FPs.reduce((acc: any, curr: any) => acc + curr, 0);
+        this.totalFN = FNs.reduce((acc: any, curr: any) => acc + curr, 0);
+        this.precision = this.totalTP / (this.totalTP + this.totalFP);
+        this.recall = this.totalTP / (this.totalTP + this.totalFN);
         newChartData.datasets.push({ data: TPs, label: 'TP' });
         newChartData.datasets.push({ data: FPs, label: 'FP' });
         newChartData.datasets.push({ data: FNs, label: 'FN' });
