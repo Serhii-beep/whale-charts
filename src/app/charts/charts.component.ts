@@ -97,6 +97,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
         let tasks = res;
         console.log(tasks);
         this.imageWhales = [];
+        tasks = tasks.filter((task: any) => task.is_labeled);
         this.tasksCompleted = tasks.length;
         var annotations: any = [];
         var predictions: any = [];
