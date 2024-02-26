@@ -1,10 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Chart, ChartConfiguration, ChartData, ChartType } from 'chart.js';
-import Annotation from 'chartjs-plugin-annotation';
-import DataLabelsPlugin from 'chartjs-plugin-datalabels';
-import { BaseChartDirective } from 'ng2-charts';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { EMPTY, Subject, Subscription, catchError, forkJoin, map, of, switchMap, takeUntil, tap } from 'rxjs';
 
@@ -26,12 +22,13 @@ export class ChartsComponent implements OnInit, OnDestroy {
   public totalFN: number = 0;
   public precision: number = 0;
   public recall: number = 0;
+  public iouThresh = 0.5;
+  public scoreThresh = 0.5;
 
   constructor(private httpClient: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
     private spinnerService: NgxSpinnerService) {
-    Chart.register(Annotation);
   }
 
   ngOnInit(): void {
@@ -70,50 +67,15 @@ export class ChartsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/projects']);
   }
 
-  public barChartType: ChartType = 'bar';
-  public barChartPlugins = [DataLabelsPlugin]
-
-  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
-
-  public barChartOptions: ChartConfiguration['options'] = {
-    scales: {
-      x: {},
-      y: {
-        min: 0
-      }
-    },
-    plugins: {
-      legend: {
-        display: true
-      },
-      datalabels: {
-        anchor: 'end',
-        align: 'end'
-      }
-    }
-  };
-
-  public barChartData: ChartData<'bar'> = {
-    labels: ['Task1', 'Task2', 'Task3', 'Task4', 'Task5', 'Task6', 'Task7'],
-    datasets: [
-      { data: [65, 59, 80, 81, 56, 55, 40], label: 'TP' },
-      { data: [28, 48, 40, 19, 86, 27, 90], label: 'FP' },
-      { data: [58, 78, 20, 45, 76, 17, 50], label: 'FN' },
-    ]
-  }
-
   public sendNewRequest(): void {
     if(this.interval) {
       clearInterval(this.interval);
     }
     this.getData();
-    this.interval = setInterval(() => {
-      console.log('Sending new request...');
-      this.getData();
-    }, 15000);
   }
 
-  private getData(): void {
+  public getData(): void {
+    this.spinnerService.show('key-stats-spinner');
     if(this.currentSubscription) {
       this.currentSubscription.unsubscribe();
     }
@@ -145,6 +107,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
         resp.sort((a: any, b: any) => new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime());
         var annotations: any = [];
         var predictions: any = [];
+        console.log(resp);
         resp.forEach((task: any) => {
           let a: any = [];
           task.annotations.forEach((annotation: any) => {
@@ -154,20 +117,16 @@ export class ChartsComponent implements OnInit, OnDestroy {
           annotations.push(a);
           let p: any = [];
           task.predictions.forEach((prediction: any) => {
-            const t = prediction.result.map((pred: any) => pred.value);
+            const t = prediction.result.filter((pred: any) => pred.score >= this.scoreThresh)
+              .map((pred: any) => pred.value);
             p = [...p, ...t];
           });
           predictions.push(p);
         });
-        let newChartData: ChartData<'bar'> = {
-          labels: [],
-          datasets: []
-        };
         let TPs: any = [];
         let FPs: any = [];
         let FNs: any = [];
         for(let i = 0; i < annotations.length; ++i) {
-          newChartData.labels?.push(`Task ${i + 1}`);
           const { TP, FP, FN } = this.evaluateDetection(annotations[i], predictions[i]);
           console.log(`Task: ${i + 1}; TP: ${TP}, FP: ${FP}, FN: ${FN}`);
           TPs.push(TP);
@@ -179,19 +138,17 @@ export class ChartsComponent implements OnInit, OnDestroy {
         this.totalFN = FNs.reduce((acc: any, curr: any) => acc + curr, 0);
         this.precision = this.totalTP / (this.totalTP + this.totalFP);
         this.recall = this.totalTP / (this.totalTP + this.totalFN);
-        newChartData.datasets.push({ data: TPs, label: 'TP' });
-        newChartData.datasets.push({ data: FPs, label: 'FP' });
-        newChartData.datasets.push({ data: FNs, label: 'FN' });
-        this.barChartData = newChartData;
+        this.spinnerService.hide('key-stats-spinner');
       }),
       catchError(error => {
         console.log(error);
+        this.spinnerService.hide('key-stats-spinner');
         return of(EMPTY);
       })
     ).subscribe();
   }
 
-  private evaluateDetection(gtBoxes: any, predBoxes: any, iouThreshold = 0.5): { TP: number; FP: number; FN: number } {
+  private evaluateDetection(gtBoxes: any, predBoxes: any): { TP: number; FP: number; FN: number } {
     let TP = 0;
     let FP = 0;
 
@@ -203,7 +160,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
         if(matchedGTBoxes.has(idx) || matchFound) return;
 
         const iou = this.calculateIoU(predBox, gtBox);
-        if(iou >= iouThreshold) {
+        if(iou >= this.iouThresh) {
           TP++;
           matchFound = true;
           matchedGTBoxes.add(idx);

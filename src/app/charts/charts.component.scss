@@ -13,7 +13,7 @@
 
 .back-button {
     position: absolute;
-    top: 40px;
+    top: 25px;
     left: 40px;
     width: 160px;
     height: 45px;
@@ -48,6 +48,26 @@
     font-size: 20px;
     font-weight: 700;
     letter-spacing: 1.5px;
+}
+
+.reload-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding-top: 50px;
+    width: 100%;
+}
+
+.stats-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    padding: 0 40px;
+}
+
+.key-stats {
+    position: relative;
 }
 
 .chart {
