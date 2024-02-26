@@ -10,7 +10,7 @@ import { LoginComponent } from './login/login.component';
 import { ProjectsComponent } from './projects/projects.component';
 import { ChartsComponent } from './charts/charts.component';
 import { AuthInterceptor } from './auth.interceptor';
-import { NgxSpinnerModule } from 'ngx-spinner'; 
+import { NgxSpinnerModule } from 'ngx-spinner';
 
 @NgModule({
   declarations: [

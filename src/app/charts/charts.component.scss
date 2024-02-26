@@ -70,7 +70,133 @@
     position: relative;
 }
 
-.chart {
-    width: 1000px;
-    height: 1000px;
+.container {
+    font-family: 'lato', sans-serif;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 10px;
+}
+
+.items-wrapper {
+    position: relative;
+}
+
+.responsive-table {
+    li {
+        border-radius: 3px;
+        padding: 25px 30px;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 25px;    
+    }
+
+    .table-header {
+        background-color: #95A5A6;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.03rem;
+    }
+
+    .table-row {
+        background-color: #fff;
+        box-shadow: 0px 0px 9px 0px rgba(0, 0, 0, 0.1);
+    }
+
+    .col-1 {
+        flex-basis: 40%;
+    }
+
+    .col-2 {
+        flex-basis: 20%;
+    }
+
+    .col-3 {
+        flex-basis: 20%;
+    }
+
+    .col-4 {
+        flex-basis: 20%;
+    }
+
+    @media all and (max-width: 767px) {
+        .table-header {
+          display: none;
+        }
+
+        li {
+          display: block;
+        }
+
+        .col {
+          flex-basis: 100%;
+        }
+
+        .col {
+          display: flex;
+          padding: 10px 0;
+          &:before {
+            color: #6C7A89;
+            padding-right: 10px;
+            content: attr(data-label);
+            flex-basis: 50%;
+            text-align: right;
+          }
+        }
+    }
+}
+
+input {
+    border: 0;
+    outline: 0;
+    font-size: 14px;
+    border-radius: 320px;
+    padding: 16px;
+    background-color: #EBECF0;
+    text-shadow: 1px 1px 0 #fff;
+    box-shadow: inset 2px 2px 5px #BABECC, inset -5px -5px 10px #fff;
+    width: 100%;
+    transition: all 0.3s ease-in-out;
+    appearance: none;
+    height: 30px;
+
+    &:focus {
+        box-shadow: inset 1px 1px 2px #BABECC, inset -1px -1px 2px #fff;
+    }
+}
+
+label {
+    display: block;
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.update-btn {
+    border: 0;
+    outline: 0;
+    font-size: 14px;
+    border-radius: 320px;
+    padding: 16px;
+    background-color: #EBECF0;
+    text-shadow: 1px 1px 0 #fff;
+    color: #000;
+    box-shadow: -5px -5px 20px #fff, 5px 5px 20px #BABECC;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    font-weight: 500;
+
+    &:hover {
+        box-shadow: -2px -2px 5px #fff, 2px 2px 5px #BABECC;
+    }
+
+    &:active {
+        box-shadow: inset 1px 1px 2px #BABECC, inset -1px -1px 2px #fff;
+    }
+}
+
+.search-input {
+    max-width: 800px;
+    margin-bottom: 40px;
+    margin-top: 40px;
+    height: 45px;
 }

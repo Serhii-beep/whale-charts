@@ -5,9 +5,6 @@
       Project: {{ projectName }}
     </div>
   </div>
-  <div class="reload-wrapper">
-    <button (click)="getData()">Update data</button>
-  </div>
   <div class="stats-wrapper">
     <div class="key-stats">
       <div>
@@ -32,13 +29,38 @@
     </div>
     <div class="user-inputs">
       <div>IoU threshold (between 0 and 1):
-        <input [(ngModel)]="iouThresh">
+        <label>
+          <input [(ngModel)]="iouThresh">
+        </label>
       </div>
       <div>Score threshold (between 0 and 1):
-        <input [(ngModel)]="scoreThresh">
+        <label>
+          <input [(ngModel)]="scoreThresh">
+        </label>
       </div>
+      <button class="update-btn" (click)="getData()">Update data</button>
     </div>
   </div>
+  <input class="search-input" placeholder="Search by image name" [(ngModel)]="searchImageInput" (ngModelChange)="searchInputChanged()">
+</div>
+<div class="container">
+  <ul class="responsive-table">
+    <li class="table-header">
+      <div class="col col-1">Image Name</div>
+      <div class="col col-2">TP</div>
+      <div class="col col-3">FP</div>
+      <div class="col col-4">FN</div>
+    </li>
+    <div class="items-wrapper">
+      <li *ngFor="let img of filteredImageWhales" class="table-row">
+        <div class="col col-1" data-label="Image Name">{{ img.imageName }}</div>
+        <div class="col col-2" data-label="TP">{{ img.tp }}</div>
+        <div class="col col-3" data-label="FP">{{ img.fp }}</div>
+        <div class="col col-4" data-label="FN">{{ img.fn }}</div>
+      </li>
+      <ngx-spinner name="table-spinner" bdColor = "#ffffff" size = "medium" color = "#000000" type = "square-jelly-box" [fullScreen] = "false"></ngx-spinner>
+    </div>
+  </ul>
 </div>
 
 <ngx-spinner bdColor = "rgba(0, 0, 0, 1)" size = "medium" color = "#fff" type = "square-jelly-box" [fullScreen] = "true"></ngx-spinner>

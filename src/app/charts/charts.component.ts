@@ -1,13 +1,14 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { EMPTY, Subject, Subscription, catchError, forkJoin, map, of, switchMap, takeUntil, tap } from 'rxjs';
+import { ImageWhale } from '../models/image-whale';
 
 @Component({
   selector: 'app-charts',
   templateUrl: './charts.component.html',
-  styleUrls: ['./charts.component.scss']
+  styleUrls: ['./charts.component.scss'],
 })
 export class ChartsComponent implements OnInit, OnDestroy {
   private unsubscribe$ = new Subject();
@@ -24,6 +25,9 @@ export class ChartsComponent implements OnInit, OnDestroy {
   public recall: number = 0;
   public iouThresh = 0.5;
   public scoreThresh = 0.5;
+  public imageWhales: ImageWhale[] = [];
+  public filteredImageWhales: ImageWhale[] = [];
+  public searchImageInput: string = "";
 
   constructor(private httpClient: HttpClient,
     private route: ActivatedRoute,
@@ -74,41 +78,33 @@ export class ChartsComponent implements OnInit, OnDestroy {
     this.getData();
   }
 
+  public searchInputChanged() {
+    this.filteredImageWhales = this.imageWhales.filter(x => x.imageName.toLowerCase().includes(this.searchImageInput.toLowerCase()));
+  }
+
   public getData(): void {
     this.spinnerService.show('key-stats-spinner');
+    this.spinnerService.show('table-spinner');
     if(this.currentSubscription) {
       this.currentSubscription.unsubscribe();
     }
-    this.currentSubscription = this.httpClient.get(`http://129.97.251.100:8080/api/tasks?project=${this.projectId}&page=1&page_size=100`).pipe(
+    this.currentSubscription = this.httpClient.get(`http://129.97.251.100:8080/api/projects/${this.projectId}/tasks?page_size=100000`).pipe(
       takeUntil(this.unsubscribe$),
-      switchMap((res: any) => {
+      tap((res: any) => {
         if(!res || res.length === 0) {
-          return of(EMPTY);
+          return;
         }
-        let tasks = res.tasks;
-        const tasksRequests = tasks.map((task: any) => this.httpClient.get(`http://129.97.251.100:8080/api/tasks/${task.id}`).pipe(
-          catchError(error => {
-            console.log(error);
-            return of(EMPTY);
-          })
-        ));
-
-        return forkJoin(tasksRequests).pipe(
-          map((results: any) => results.filter((result: any) => result !== null)),
-          catchError(error => {
-            console.log(error);
-            return of(EMPTY);
-          })
-        );
-      }),
-      tap(resp => {
-        resp = resp.filter((x: any) => !!x.completed_at);
-        this.tasksCompleted = resp.length;
-        resp.sort((a: any, b: any) => new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime());
+        let tasks = res;
+        console.log(tasks);
+        this.imageWhales = [];
+        this.tasksCompleted = tasks.length;
         var annotations: any = [];
         var predictions: any = [];
-        console.log(resp);
-        resp.forEach((task: any) => {
+        let imgNames: any = [];
+        tasks.forEach((task: any) => {
+          const lastIndexSlash = task.data.image.lastIndexOf('/');
+          const imgName = task.data.image.substring(lastIndexSlash + 1);
+          imgNames.push(imgName);
           let a: any = [];
           task.annotations.forEach((annotation: any) => {
             const t = annotation.result.map((ann: any) => ann.value);
@@ -128,11 +124,19 @@ export class ChartsComponent implements OnInit, OnDestroy {
         let FNs: any = [];
         for(let i = 0; i < annotations.length; ++i) {
           const { TP, FP, FN } = this.evaluateDetection(annotations[i], predictions[i]);
-          console.log(`Task: ${i + 1}; TP: ${TP}, FP: ${FP}, FN: ${FN}`);
+          this.imageWhales.push({
+            imageName: imgNames[i],
+            tp: TP,
+            fp: FP,
+            fn: FN
+          });
+          console.log(this.imageWhales[i]);
           TPs.push(TP);
           FPs.push(FP);
           FNs.push(FN);
         };
+        this.filteredImageWhales = this.imageWhales;
+        this.spinnerService.hide('table-spinner');
         this.totalTP = TPs.reduce((acc: any, curr: any) => acc + curr, 0);
         this.totalFP = FPs.reduce((acc: any, curr: any) => acc + curr, 0);
         this.totalFN = FNs.reduce((acc: any, curr: any) => acc + curr, 0);
@@ -143,6 +147,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
       catchError(error => {
         console.log(error);
         this.spinnerService.hide('key-stats-spinner');
+        this.spinnerService.hide('table-spinner');
         return of(EMPTY);
       })
     ).subscribe();
