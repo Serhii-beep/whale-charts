@@ -3,8 +3,8 @@
         {{ project.title }}
     </div>
     <div class="footer">
-        <img class="logo" src="assets/images/vip_logo.png" alt="vip logo">
-        <img class="logo" src="assets/images/dfo_logo.jpg" alt="dfo logo">
+        <img class="logo" src="assets/images/vip_logo.png" alt="vip logo" (click)="navigate('https://vip.uwaterloo.ca/')">
+        <img class="logo" src="assets/images/dfo_logo.jpg" alt="dfo logo" (click)="navigate('https://www.dfo-mpo.gc.ca/index-eng.html')">
     </div>
 </div>
 <ngx-spinner bdColor = "rgba(0, 0, 0, 1)" size = "medium" color = "#fff" type = "square-jelly-box" [fullScreen] = "true"></ngx-spinner>

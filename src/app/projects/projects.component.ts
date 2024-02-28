@@ -39,6 +39,10 @@ export class ProjectsComponent implements OnInit, OnDestroy {
     this.unsubscribe$.complete();
   }
 
+  public navigate(url: string): void {
+    window.open(url, '_blank');
+  }
+
   public navigateToProject(projectId: any): void {
     this.router.navigate(['/charts', projectId]);
   }
