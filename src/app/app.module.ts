@@ -11,6 +11,7 @@ import { ProjectsComponent } from './projects/projects.component';
 import { ChartsComponent } from './charts/charts.component';
 import { AuthInterceptor } from './auth.interceptor';
 import { NgxSpinnerModule } from 'ngx-spinner';
+import { ToastrModule } from 'ngx-toastr';
 
 @NgModule({
   declarations: [
@@ -26,7 +27,8 @@ import { NgxSpinnerModule } from 'ngx-spinner';
     HttpClientModule,
     NgChartsModule,
     AppRoutingModule,
-    NgxSpinnerModule
+    NgxSpinnerModule,
+    ToastrModule.forRoot()
   ],
   providers: [
     {

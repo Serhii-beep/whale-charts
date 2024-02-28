@@ -28,6 +28,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
   public imageWhales: ImageWhale[] = [];
   public filteredImageWhales: ImageWhale[] = [];
   public searchImageInput: string = "";
+  public keyStatsLoading = true;
 
   constructor(private httpClient: HttpClient,
     private route: ActivatedRoute,
@@ -83,6 +84,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
   }
 
   public getData(): void {
+    this.keyStatsLoading = true;
     this.spinnerService.show('key-stats-spinner');
     this.spinnerService.show('table-spinner');
     if(this.currentSubscription) {
@@ -144,11 +146,13 @@ export class ChartsComponent implements OnInit, OnDestroy {
         this.precision = this.totalTP / (this.totalTP + this.totalFP);
         this.recall = this.totalTP / (this.totalTP + this.totalFN);
         this.spinnerService.hide('key-stats-spinner');
+        this.keyStatsLoading = false;
       }),
       catchError(error => {
         console.log(error);
         this.spinnerService.hide('key-stats-spinner');
         this.spinnerService.hide('table-spinner');
+        this.keyStatsLoading = false;
         return of(EMPTY);
       })
     ).subscribe();

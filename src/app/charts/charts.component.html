@@ -7,23 +7,53 @@
   </div>
   <div class="stats-wrapper">
     <div class="key-stats">
-      <div>
-        Tasks Completed: {{ tasksCompleted }}
+      <div *ngIf="!keyStatsLoading" class="key-stats-item">
+        <div class="key-stats-item-header">
+          Tasks Completed
+        </div>
+        <div class="key-stats-item-value">
+          {{ tasksCompleted }}
+        </div>
       </div>
-      <div>
-        Total TP: {{ totalTP }}
+      <div *ngIf="!keyStatsLoading" class="key-stats-item">
+        <div class="key-stats-item-header">
+          Total TP
+        </div>
+        <div class="key-stats-item-value">
+          {{ totalTP }}
+        </div>
       </div>
-      <div>
-        Total FP: {{ totalFP }}
+      <div *ngIf="!keyStatsLoading" class="key-stats-item">
+        <div class="key-stats-item-header">
+          Total FP
+        </div>
+        <div class="key-stats-item-value">
+          {{ totalFP }}
+        </div>
       </div>
-      <div>
-        Total FN: {{ totalFN }}
+      <div *ngIf="!keyStatsLoading" class="key-stats-item">
+        <div class="key-stats-item-header">
+          Total FN
+        </div>
+        <div class="key-stats-item-value">
+          {{ totalFN }}
+        </div>
       </div>
-      <div>
-        Precision: {{ precision | percent }}
+      <div *ngIf="!keyStatsLoading" class="key-stats-item">
+        <div class="key-stats-item-header">
+          Precision
+        </div>
+        <div class="key-stats-item-value">
+          {{ precision | percent }}
+        </div>
       </div>
-      <div>
-        Recall: {{ recall | percent }}
+      <div *ngIf="!keyStatsLoading" class="key-stats-item">
+        <div class="key-stats-item-header">
+          Recall
+        </div>
+        <div class="key-stats-item-value">
+          {{ recall | percent }}
+        </div>
       </div>
       <ngx-spinner name="key-stats-spinner" bdColor = "#ffffff" size = "medium" color = "#000000" type = "square-jelly-box" [fullScreen] = "false"></ngx-spinner>
     </div>
