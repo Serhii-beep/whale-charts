@@ -29,6 +29,8 @@ export class ChartsComponent implements OnInit, OnDestroy {
   public filteredImageWhales: ImageWhale[] = [];
   public searchImageInput: string = "";
   public keyStatsLoading = true;
+  public bbWidth: number = 40;
+  public bbHeight: number = 40;
 
   constructor(private httpClient: HttpClient,
     private route: ActivatedRoute,
@@ -109,15 +111,40 @@ export class ChartsComponent implements OnInit, OnDestroy {
           const imgName = task.data.image.substring(lastIndexSlash + 1);
           imgNames.push(imgName);
           let a: any = [];
+          let w = 0;
+          let h = 0;
+          let w_h_given = false;
+          if(task.annotations && task.annotations.length > 0 && task.annotations[0].result.length > 0) {
+            w_h_given = true;
+            w = task.annotations[0].result[0].original_width;
+            h = task.annotations[0].result[0].original_height;
+          }
           task.annotations.forEach((annotation: any) => {
-            const t = annotation.result.map((ann: any) => ann.value);
+            const t = annotation.result.map((ann: any) => {
+              if(w_h_given) {
+                ann.value.x = ann.value.x * w / 100.0;
+                ann.value.y = ann.value.y * h / 100.0;
+                ann.value.width = this.bbWidth;
+                if(ann.type === "keypointlabels") {
+                  ann.value.x -= ann.value.width / 2.0;
+                  ann.value.y -= ann.value.width / 2.0;
+                }
+              }
+              return ann.value;
+            });
             a = [...a, ...t];
           });
           annotations.push(a);
           let p: any = [];
           task.predictions.forEach((prediction: any) => {
-            const t = prediction.result.filter((pred: any) => pred.score >= this.scoreThresh)
-              .map((pred: any) => pred.value);
+            const t = prediction.result.filter((pred: any) => pred.score >= this.scoreThresh).map((pred: any) => {
+              if(w_h_given) {
+                pred.value.x = pred.value.x * w / 100.0;
+                pred.value.y = pred.value.y * h / 100.0;
+                pred.value.width = this.bbWidth;
+              }
+              return pred.value;
+            });
             p = [...p, ...t];
           });
           predictions.push(p);
@@ -206,6 +233,6 @@ export class ChartsComponent implements OnInit, OnDestroy {
   }
 
   private convertToBox(box: any): [number, number, number, number] {
-    return [box.x, box.y, box.x + box.width, box.y + box.height];
+    return [box.x, box.y, box.x + box.width, box.y + box.width];
   }
 }

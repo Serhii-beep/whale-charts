@@ -68,6 +68,16 @@
           <input [(ngModel)]="scoreThresh">
         </label>
       </div>
+      <div>Bounding box width (in pixels):
+        <label>
+          <input [(ngModel)]="bbWidth">
+        </label>
+      </div>
+      <div>Bounding box height (in pixels):
+        <label>
+          <input [(ngModel)]="bbHeight">
+        </label>
+      </div>
       <button class="update-btn" (click)="getData()">Update data</button>
     </div>
   </div>
