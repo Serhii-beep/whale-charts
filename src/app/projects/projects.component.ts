@@ -3,6 +3,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { EMPTY, Subject, catchError, of, takeUntil, tap } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-projects',
@@ -20,7 +21,7 @@ export class ProjectsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.spinnerService.show();
-    this.httpClient.get('http://129.97.251.100:8080/api/projects').pipe(
+    this.httpClient.get(`http://${environment.ip}:${environment.port}/api/projects`).pipe(
       takeUntil(this.unsubscribe$),
       tap((res: any) => {
         this.projects = res.results;

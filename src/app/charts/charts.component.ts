@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { EMPTY, Subject, Subscription, catchError, forkJoin, map, of, switchMap, takeUntil, tap } from 'rxjs';
 import { ImageWhale } from '../models/image-whale';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-charts',
@@ -43,7 +44,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
     const projId = this.route.snapshot.paramMap.get('projectId');
     if(projId) {
       this.projectId = parseInt(projId);
-      this.httpClient.get(`http://129.97.251.100:8080/api/projects/${this.projectId}`).pipe(
+      this.httpClient.get(`http://${environment.ip}:${environment.port}/api/projects/${this.projectId}`).pipe(
         takeUntil(this.unsubscribe$),
         tap((res: any) => {
           this.projectName = res.title;
@@ -92,7 +93,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
     if(this.currentSubscription) {
       this.currentSubscription.unsubscribe();
     }
-    this.currentSubscription = this.httpClient.get(`http://129.97.251.100:8080/api/projects/${this.projectId}/tasks?page_size=100000`).pipe(
+    this.currentSubscription = this.httpClient.get(`http://${environment.ip}:${environment.port}/api/projects/${this.projectId}/tasks?page_size=100000`).pipe(
       takeUntil(this.unsubscribe$),
       tap((res: any) => {
         if(!res || res.length === 0) {

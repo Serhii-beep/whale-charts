@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { EMPTY, catchError, of, tap } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -28,7 +29,7 @@ export class LoginComponent implements OnInit {
       return;
     }
     localStorage.setItem('label_studio_api_key', this.apiKey);
-    this.httpClient.get('http://129.97.251.100:8080/api/projects').pipe(
+    this.httpClient.get(`http://${environment.ip}:${environment.port}/api/projects`).pipe(
       tap(() => {
         this.toastr.success('API key is saved');
         this.router.navigate(['/projects'])
