@@ -156,7 +156,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
         for(let i = 0; i < annotations.length; ++i) {
           const { TP, FP, FN } = this.evaluateDetection(annotations[i], predictions[i]);
           this.imageWhales.push({
-            imageName: imgNames[i],
+            imageName: decodeURI(imgNames[i]),
             tp: TP,
             fp: FP,
             fn: FN
